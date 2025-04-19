@@ -4,6 +4,28 @@ import rectpack.maxrects as maxrects
 
 
 class TestMaxRects(TestCase):
+    def test_remove_rect_frees_space(self):
+        m = maxrects.MaxRects(100, 40)
+        r1 = m.add_rect(40, 40, rid=1)
+        r2 = m.add_rect(60, 40, rid=2)
+        self.assertIsNotNone(r1)
+        self.assertIsNotNone(r2)
+        # No more space for another 40x40
+        r3 = m.add_rect(40, 40, rid=3)
+        self.assertIsNone(r3)
+        # Remove r1, now there should be space
+        removed = m.remove_rect(1)
+        self.assertTrue(removed)
+        r4 = m.add_rect(40, 40, rid=4)
+        self.assertIsNotNone(r4)
+        # The new rectangle should overlap the freed space
+        self.assertEqual(r4.width, 40)
+        self.assertEqual(r4.height, 40)
+        self.assertTrue(
+            (r4.x == r1.x and r4.y == r1.y) or
+            (r4.x < r1.x + r1.width and r4.x + r4.width > r1.x and
+             r4.y < r1.y + r1.height and r4.y + r4.height > r1.y)
+        )
 
     def test_init(self):
         # Test initial maximal rectangle

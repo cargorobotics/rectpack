@@ -10,6 +10,22 @@ first_item = operator.itemgetter(0)
 
 
 class MaxRects(PackingAlgorithm):
+    def remove_rect(self, rid):
+        """
+        Remove a rectangle by its rid and add its space back to _max_rects.
+        Returns True if removed, False otherwise.
+        """
+        rect_to_remove = None
+        for r in self.rectangles:
+            if r.rid == rid:
+                rect_to_remove = r
+                break
+        if rect_to_remove is None:
+            return False
+        self.rectangles.remove(rect_to_remove)
+        self._max_rects.append(Rectangle(rect_to_remove.x, rect_to_remove.y, rect_to_remove.width, rect_to_remove.height))
+        self._remove_duplicates()
+        return True
 
     def __init__(self, width, height, rot=True, *args, **kwargs):
         super(MaxRects, self).__init__(width, height, rot, *args, **kwargs)
