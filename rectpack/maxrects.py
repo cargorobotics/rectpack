@@ -25,7 +25,47 @@ class MaxRects(PackingAlgorithm):
         self.rectangles.remove(rect_to_remove)
         self._max_rects.append(Rectangle(rect_to_remove.x, rect_to_remove.y, rect_to_remove.width, rect_to_remove.height))
         self._remove_duplicates()
+        self._merge_adjacent_rects()
         return True
+
+    def _merge_adjacent_rects(self):
+        """
+        Merge adjacent rectangles in _max_rects if they can form a larger rectangle.
+        Two rectangles can be merged if:
+        1. They share an edge
+        2. The merged result would be a rectangle (not an L-shape)
+        """
+        merged = True
+        while merged:
+            merged = False
+            for i, r1 in enumerate(self._max_rects):
+                for j, r2 in enumerate(self._max_rects[i+1:], i+1):
+                    # Check if rectangles can be merged horizontally
+                    if (r1.bottom == r2.bottom and r1.height == r2.height and
+                        (r1.right == r2.left or r1.left == r2.right)):
+                        # Merge horizontally
+                        left = min(r1.left, r2.left)
+                        width = r1.width + r2.width
+                        new_rect = Rectangle(left, r1.bottom, width, r1.height)
+                        self._max_rects.remove(r1)
+                        self._max_rects.remove(r2)
+                        self._max_rects.append(new_rect)
+                        merged = True
+                        break
+                    # Check if rectangles can be merged vertically
+                    elif (r1.left == r2.left and r1.width == r2.width and
+                          (r1.top == r2.bottom or r1.bottom == r2.top)):
+                        # Merge vertically
+                        bottom = min(r1.bottom, r2.bottom)
+                        height = r1.height + r2.height
+                        new_rect = Rectangle(r1.left, bottom, r1.width, height)
+                        self._max_rects.remove(r1)
+                        self._max_rects.remove(r2)
+                        self._max_rects.append(new_rect)
+                        merged = True
+                        break
+                if merged:
+                    break
 
     def __init__(self, width, height, rot=True, *args, **kwargs):
         super(MaxRects, self).__init__(width, height, rot, *args, **kwargs)
