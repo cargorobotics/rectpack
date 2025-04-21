@@ -80,7 +80,7 @@ class PackingAlgorithm(object):
         """
         raise NotImplementedError
         
-    def add_rect(self, width, height, rid=None):
+    def add_rect(self, width, height, rid=None, thickness=0):
         """
         Add rectangle of widthxheight dimensions.
 
