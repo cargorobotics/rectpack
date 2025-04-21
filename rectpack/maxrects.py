@@ -67,8 +67,9 @@ class MaxRects(PackingAlgorithm):
                 if merged:
                     break
 
-    def __init__(self, width, height, rot=True, *args, **kwargs):
+    def __init__(self, width, height, rot=True, max_thickness_diff=50, *args, **kwargs):
         super(MaxRects, self).__init__(width, height, rot, *args, **kwargs)
+        self.max_thickness_diff = max_thickness_diff
    
     def _rect_fitness(self, max_rect, width, height):
         """
@@ -103,7 +104,7 @@ class MaxRects(PackingAlgorithm):
             # Check if rectangles overlap in x-axis
             if not (x + width <= rect.x or x >= rect.x + rect.width):
                 # If they overlap in x-axis, check thickness difference
-                if abs(thickness - rect.thickness) > 50:
+                if abs(thickness - rect.thickness) > self.max_thickness_diff:
                     return False
         return True
 

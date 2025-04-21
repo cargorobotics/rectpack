@@ -196,11 +196,12 @@ class PackerOnline(object):
     Rectangles are packed as soon are they are added
     """
 
-    def __init__(self, pack_algo=MaxRectsBssf, rotation=True):
+    def __init__(self, pack_algo=MaxRectsBssf, rotation=True, max_thickness_diff=50):
         """
         Arguments:
             pack_algo (PackingAlgorithm): What packing algo to use
             rotation (bool): Enable/Disable rectangle rotation
+            max_thickness_diff (int, float): Maximum allowed thickness difference
         """
         self._rotation = rotation
         self._pack_algo = pack_algo
@@ -538,7 +539,8 @@ def newPacker(mode=PackingMode.Offline,
          bin_algo=PackingBin.BBF, 
         pack_algo=MaxRectsBssf,
         sort_algo=SORT_AREA, 
-        rotation=True):
+        rotation=True,
+        max_thickness_diff=50):
     """
     Packer factory helper function
 
@@ -586,8 +588,8 @@ def newPacker(mode=PackingMode.Offline,
 
     if sort_algo:
         return packer_class(pack_algo=pack_algo, sort_algo=sort_algo, 
-            rotation=rotation)
+            rotation=rotation, max_thickness_diff=max_thickness_diff)
     else:
-        return packer_class(pack_algo=pack_algo, rotation=rotation)
+        return packer_class(pack_algo=pack_algo, rotation=rotation, max_thickness_diff=max_thickness_diff)
 
 
