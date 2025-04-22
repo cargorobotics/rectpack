@@ -184,6 +184,14 @@ class PackerBBFMixin(object):
 
 
 class PackerOnline(object):
+    def remove_rect(self, rid):
+        """
+        Remove a rectangle by its rid from any bin. Returns True if removed, False otherwise.
+        """
+        for bin in itertools.chain(self._closed_bins, self._open_bins):
+            if hasattr(bin, 'remove_rect') and bin.remove_rect(rid):
+                return True
+        return False
     """
     Rectangles are packed as soon are they are added
     """
@@ -301,6 +309,11 @@ class PackerOnline(object):
 
 
 class Packer(PackerOnline):
+    def remove_rect(self, rid):
+        """
+        Remove a rectangle by its rid from any bin. Returns True if removed, False otherwise.
+        """
+        return super().remove_rect(rid)
     """
     Rectangles aren't packed untils pack() is called
     """

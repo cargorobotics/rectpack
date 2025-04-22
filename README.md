@@ -100,6 +100,35 @@ Lastly all the dimmension (bins and rectangles) must be integers or decimals to 
 collisions caused by floating point rounding. If your data is floating point use 
 float2dec to convert float values to decimals (see float below)
 
+## Removing Rectangles
+
+Rectangles can be removed from bins after they've been placed, and the freed space will be available for new rectangles:
+
+```python
+from rectpack import newPacker
+
+# Create a packer and add a bin
+packer = newPacker()
+packer.add_bin(100, 100)
+
+# Add rectangles with IDs
+packer.add_rect(40, 40, rid=1)
+packer.add_rect(60, 40, rid=2)
+packer.pack()
+
+# Remove a rectangle by its ID
+packer.remove_rect(1)  # Returns True if found and removed
+
+# Add a new rectangle - it can use the freed space
+packer.add_rect(40, 40, rid=3)
+packer.pack()
+```
+
+When a rectangle is removed:
+- The space it occupied becomes available for new rectangles
+- The bin's internal state is updated to track the freed space
+- Subsequent rectangle placements can use this space
+- Returns `True` if the rectangle was found and removed, `False` otherwise
 
 ## API
 
