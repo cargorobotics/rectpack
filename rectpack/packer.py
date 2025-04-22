@@ -105,7 +105,7 @@ class PackerBNFMixin(object):
     doesn't fit, close the current bin and go to the next.
     """
 
-    def add_rect(self, width, height, rid=None):
+    def add_rect(self, width, height, rid=None, thickness=0):
         while True:
             # if there are no open bins, try to open a new one
             if len(self._open_bins)==0:
@@ -115,7 +115,7 @@ class PackerBNFMixin(object):
                     return None
 
             # we have at least one open bin, so check if it can hold this rect
-            rect = self._open_bins[0].add_rect(width, height, rid=rid)
+            rect = self._open_bins[0].add_rect(width, height, rid=rid, thickness=thickness)
             if rect is not None:
                 return rect
 
@@ -129,10 +129,10 @@ class PackerBFFMixin(object):
     BFF (Bin First Fit): Pack rectangle in first bin it fits
     """
  
-    def add_rect(self, width, height, rid=None):
+    def add_rect(self, width, height, rid=None, thickness=0):
         # see if this rect will fit in any of the open bins
         for b in self._open_bins:
-            rect = b.add_rect(width, height, rid=rid)
+            rect = b.add_rect(width, height, rid=rid, thickness=thickness)
             if rect is not None:
                 return rect
 
@@ -144,7 +144,7 @@ class PackerBFFMixin(object):
 
             # _new_open_bin may return a bin that's too small,
             # so we have to double-check
-            rect = new_bin.add_rect(width, height, rid=rid)
+            rect = new_bin.add_rect(width, height, rid=rid, thickness=thickness)
             if rect is not None:
                 return rect
 
@@ -157,14 +157,14 @@ class PackerBBFMixin(object):
     # only create this getter once
     first_item = operator.itemgetter(0)
 
-    def add_rect(self, width, height, rid=None):
+    def add_rect(self, width, height, rid=None, thickness=0):
  
         # Try packing into open bins
         fit = ((b.fitness(width, height),  b) for b in self._open_bins)
         fit = (b for b in fit if b[0] is not None)
         try:
             _, best_bin = min(fit, key=self.first_item)
-            best_bin.add_rect(width, height, rid)
+            best_bin.add_rect(width, height, rid, thickness=thickness)
             return True
         except ValueError:
             pass    
@@ -178,7 +178,7 @@ class PackerBBFMixin(object):
 
             # _new_open_bin may return a bin that's too small,
             # so we have to double-check
-            if new_bin.add_rect(width, height, rid):
+            if new_bin.add_rect(width, height, rid, thickness=thickness):
                 return True
 
 
@@ -196,11 +196,12 @@ class PackerOnline(object):
     Rectangles are packed as soon are they are added
     """
 
-    def __init__(self, pack_algo=MaxRectsBssf, rotation=True):
+    def __init__(self, pack_algo=MaxRectsBssf, rotation=True, max_thickness_diff=50):
         """
         Arguments:
             pack_algo (PackingAlgorithm): What packing algo to use
             rotation (bool): Enable/Disable rectangle rotation
+            max_thickness_diff (int, float): Maximum allowed thickness difference
         """
         self._rotation = rotation
         self._pack_algo = pack_algo
@@ -538,7 +539,8 @@ def newPacker(mode=PackingMode.Offline,
          bin_algo=PackingBin.BBF, 
         pack_algo=MaxRectsBssf,
         sort_algo=SORT_AREA, 
-        rotation=True):
+        rotation=True,
+        max_thickness_diff=50):
     """
     Packer factory helper function
 
@@ -586,8 +588,8 @@ def newPacker(mode=PackingMode.Offline,
 
     if sort_algo:
         return packer_class(pack_algo=pack_algo, sort_algo=sort_algo, 
-            rotation=rotation)
+            rotation=rotation, max_thickness_diff=max_thickness_diff)
     else:
-        return packer_class(pack_algo=pack_algo, rotation=rotation)
+        return packer_class(pack_algo=pack_algo, rotation=rotation, max_thickness_diff=max_thickness_diff)
 
 

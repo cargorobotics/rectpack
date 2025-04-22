@@ -121,9 +121,9 @@ class Rectangle(object):
     width - 
     height - 
     """
-    __slots__ = ('width', 'height', 'x', 'y', 'rid')
+    __slots__ = ('width', 'height', 'x', 'y', 'rid', 'thickness')
 
-    def __init__(self, x, y, width, height, rid = None):
+    def __init__(self, x, y, width, height, rid=None, thickness=0):
         """
         Args:
             x (int, float):
@@ -131,14 +131,16 @@ class Rectangle(object):
             width (int, float):
             height (int, float):
             rid (int):
+            thickness (int, float): Thickness of the rectangle
         """
-        assert(height >=0 and width >=0)
+        assert(height >= 0 and width >= 0)
 
         self.width = width
         self.height = height
         self.x = x
         self.y = y
         self.rid = rid
+        self.thickness = thickness
 
     @property
     def bottom(self):
@@ -341,4 +343,3 @@ class Rectangle(object):
             return True
 
         return False
-

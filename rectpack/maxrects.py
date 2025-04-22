@@ -67,8 +67,9 @@ class MaxRects(PackingAlgorithm):
                 if merged:
                     break
 
-    def __init__(self, width, height, rot=True, *args, **kwargs):
+    def __init__(self, width, height, rot=True, max_thickness_diff=50, *args, **kwargs):
         super(MaxRects, self).__init__(width, height, rot, *args, **kwargs)
+        self.max_thickness_diff = max_thickness_diff
    
     def _rect_fitness(self, max_rect, width, height):
         """
@@ -86,14 +87,36 @@ class MaxRects(PackingAlgorithm):
         else:
             return None
 
-    def _select_position(self, w, h): 
+    def _check_thickness_constraint(self, x, width, thickness):
+        """
+        Check if placing a rectangle with given thickness at position x would violate
+        the thickness constraint with existing rectangles.
+
+        Args:
+            x (int, float): X coordinate where rectangle would be placed
+            width (int, float): Width of the rectangle
+            thickness (int, float): Thickness of the rectangle
+
+        Returns:
+            bool: True if placement is valid, False if it violates thickness constraint
+        """
+        for rect in self.rectangles:
+            # Check if rectangles overlap in x-axis
+            if not (x + width <= rect.x or x >= rect.x + rect.width):
+                # If they overlap in x-axis, check thickness difference
+                if abs(thickness - rect.thickness) > self.max_thickness_diff:
+                    return False
+        return True
+
+    def _select_position(self, w, h, thickness=0): 
         """
         Find max_rect with best fitness for placing a rectangle
-        of dimentsions w*h
+        of dimensions w*h
 
         Arguments:
             w (int, float): Rectangle width
             h (int, float): Rectangle height
+            thickness (int, float): Rectangle thickness
 
         Returns:
             (rect, max_rect)
@@ -105,11 +128,13 @@ class MaxRects(PackingAlgorithm):
 
         # Normal rectangle
         fitn = ((self._rect_fitness(m, w, h), w, h, m) for m in self._max_rects 
-                if self._rect_fitness(m, w, h) is not None)
+                if self._rect_fitness(m, w, h) is not None 
+                and self._check_thickness_constraint(m.x, w, thickness))
 
         # Rotated rectangle
         fitr = ((self._rect_fitness(m, h, w), h, w, m) for m in self._max_rects 
-                if self._rect_fitness(m, h, w) is not None)
+                if self._rect_fitness(m, h, w) is not None 
+                and self._check_thickness_constraint(m.x, h, thickness))
 
         if not self.rot:
             fitr = []
@@ -121,7 +146,7 @@ class MaxRects(PackingAlgorithm):
         except ValueError:
             return None, None
 
-        return Rectangle(m.x, m.y, w, h), m
+        return Rectangle(m.x, m.y, w, h, thickness=thickness), m
 
     def _generate_splits(self, m, r):
         """
@@ -185,7 +210,7 @@ class MaxRects(PackingAlgorithm):
         # Remove from max_rects
         self._max_rects = [m for m in self._max_rects if m not in contained]
 
-    def fitness(self, width, height): 
+    def fitness(self, width, height, thickness=0): 
         """
         Metric used to rate how much space is wasted if a rectangle is placed.
         Returns a value greater or equal to zero, the smaller the value the more 
@@ -194,6 +219,7 @@ class MaxRects(PackingAlgorithm):
         Arguments:
             width (int, float): Rectangle width
             height (int, float): Rectangle height
+            thickness (int, float): Rectangle thickness
 
         Returns:
             int, float: Rectangle fitness 
@@ -201,14 +227,14 @@ class MaxRects(PackingAlgorithm):
         """
         assert(width > 0 and height > 0)
         
-        rect, max_rect = self._select_position(width, height)
+        rect, max_rect = self._select_position(width, height, thickness)
         if rect is None:
             return None
 
         # Return fitness
         return self._rect_fitness(max_rect, rect.width, rect.height)
 
-    def add_rect(self, width, height, rid=None):
+    def add_rect(self, width, height, rid=None, thickness=0):
         """
         Add rectangle of widthxheight dimensions.
 
@@ -216,6 +242,7 @@ class MaxRects(PackingAlgorithm):
             width (int, float): Rectangle width
             height (int, float): Rectangle height
             rid: Optional rectangle user id
+            thickness (int, float): Rectangle thickness
 
         Returns:
             Rectangle: Rectangle with placemente coordinates
@@ -224,7 +251,7 @@ class MaxRects(PackingAlgorithm):
         assert(width > 0 and height >0)
 
         # Search best position and orientation
-        rect, _ = self._select_position(width, height)
+        rect, _ = self._select_position(width, height, thickness)
         if not rect:
             return None
         
@@ -249,16 +276,19 @@ class MaxRects(PackingAlgorithm):
 
 class MaxRectsBl(MaxRects):
     
-    def _select_position(self, w, h): 
+    def _select_position(self, w, h, thickness=0): 
         """
         Select the position where the y coordinate of the top of the rectangle
         is lower, if there are severtal pick the one with the smallest x 
         coordinate
         """
         fitn = ((m.y+h, m.x, w, h, m) for m in self._max_rects 
-                if self._rect_fitness(m, w, h) is not None)
+                if self._rect_fitness(m, w, h) is not None 
+                and self._check_thickness_constraint(m.x, w, thickness))
+
         fitr = ((m.y+w, m.x, h, w, m) for m in self._max_rects 
-                if self._rect_fitness(m, h, w) is not None)
+                if self._rect_fitness(m, h, w) is not None 
+                and self._check_thickness_constraint(m.x, h, thickness))
 
         if not self.rot:
             fitr = []
@@ -270,7 +300,7 @@ class MaxRectsBl(MaxRects):
         except ValueError:
             return None, None
 
-        return Rectangle(m.x, m.y, w, h), m
+        return Rectangle(m.x, m.y, w, h, thickness=thickness), m
 
 
 class MaxRectsBssf(MaxRects):
